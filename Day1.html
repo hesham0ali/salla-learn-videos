@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salla Twilight Day 1</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&display=swap">
+<style>
+/* ─── Tokens: Dark-first ─── */
+:root {
+  --bg:          #0C0A1A;
+  --bg-card:     #16133A;
+  --bg-code:     #080614;
+  --text:        #DDD8F8;
+  --text-muted:  #7E7AB2;
+  --text-strong: #F2EEFF;
+  --accent:      #7C5CFF;
+  --accent-2:    #FF6B47;
+  --accent-glow: rgba(124, 92, 255, 0.18);
+  --accent-glow2:rgba(255, 107, 71, 0.15);
+  --border:      rgba(124, 92, 255, 0.22);
+  --border-soft: rgba(124, 92, 255, 0.1);
+  --success:     #48FFA8;
+  --num-opacity: 0.045;
+  --code-text:   #C8C2F8;
+  --shadow:      rgba(0,0,0,0.5);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:          #F0EDFF;
+    --bg-card:     #E4DFFF;
+    --bg-code:     #1A1535;
+    --text:        #1A0F45;
+    --text-muted:  #6B64A0;
+    --text-strong: #0D0830;
+    --accent:      #5B3AFF;
+    --accent-2:    #E84D2A;
+    --accent-glow: rgba(91, 58, 255, 0.12);
+    --accent-glow2:rgba(232, 77, 42, 0.1);
+    --border:      rgba(91, 58, 255, 0.2);
+    --border-soft: rgba(91, 58, 255, 0.08);
+    --success:     #0B8A4E;
+    --num-opacity: 0.06;
+    --code-text:   #C8C2F8;
+    --shadow:      rgba(0,0,0,0.12);
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0C0A1A;--bg-card:#16133A;--bg-code:#080614;
+  --text:#DDD8F8;--text-muted:#7E7AB2;--text-strong:#F2EEFF;
+  --accent:#7C5CFF;--accent-2:#FF6B47;
+  --accent-glow:rgba(124,92,255,.18);--accent-glow2:rgba(255,107,71,.15);
+  --border:rgba(124,92,255,.22);--border-soft:rgba(124,92,255,.1);
+  --success:#48FFA8;--num-opacity:.045;--code-text:#C8C2F8;--shadow:rgba(0,0,0,.5);
+}
+:root[data-theme="light"] {
+  --bg:#F0EDFF;--bg-card:#E4DFFF;--bg-code:#1A1535;
+  --text:#1A0F45;--text-muted:#6B64A0;--text-strong:#0D0830;
+  --accent:#5B3AFF;--accent-2:#E84D2A;
+  --accent-glow:rgba(91,58,255,.12);--accent-glow2:rgba(232,77,42,.1);
+  --border:rgba(91,58,255,.2);--border-soft:rgba(91,58,255,.08);
+  --success:#0B8A4E;--num-opacity:.06;--code-text:#C8C2F8;--shadow:rgba(0,0,0,.12);
+}
+
+/* ─── Reset & Base ─── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:'Cairo',system-ui,sans-serif;background:var(--bg);color:var(--text)}
+::selection{background:var(--accent);color:#fff}
+
+/* ─── Presentation shell ─── */
+.presentation{height:100vh;display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+/* Ambient background glow — different per slide group */
+.presentation::before{
+  content:'';position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 30% 20%, var(--accent-glow) 0%, transparent 70%),
+             radial-gradient(ellipse 60% 40% at 80% 80%, var(--accent-glow2) 0%, transparent 70%);
+  transition:opacity 0.8s ease;
+  z-index:0;
+}
+
+/* ─── Progress bar ─── */
+.progress-bar{
+  position:fixed;top:0;left:0;right:0;height:3px;
+  background:var(--border-soft);z-index:100;
+}
+.progress-fill{
+  height:100%;background:var(--accent);
+  transition:width 0.4s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:0 0 12px var(--accent);
+}
+
+/* ─── Slides container ─── */
+.slides{flex:1;position:relative;overflow:hidden}
+.slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  padding:clamp(1.5rem,4vw,3rem) clamp(1.5rem,5vw,5rem);
+  padding-bottom:4rem;
+  opacity:0;transform:translateX(60px);
+  transition:opacity 0.45s ease, transform 0.45s cubic-bezier(0.4,0,0.2,1);
+  pointer-events:none;
+  z-index:1;overflow-y:auto;
+}
+.slide.active{opacity:1;transform:translateX(0);pointer-events:auto}
+.slide.exit-right{opacity:0;transform:translateX(-60px)}
+.slide.enter-left{opacity:0;transform:translateX(-60px)}
+
+/* ─── Slide header ─── */
+.slide-label{
+  font-size:0.7rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;
+}
+.slide-label::before{content:'';width:1.5rem;height:2px;background:var(--accent)}
+.slide-num-watermark{
+  position:absolute;top:1rem;left:2rem;
+  font-size:clamp(6rem,15vw,14rem);font-weight:900;
+  color:var(--text);opacity:var(--num-opacity);
+  line-height:1;pointer-events:none;user-select:none;
+  font-variant-numeric:tabular-nums;
+}
+.slide-title{
+  font-size:clamp(1.6rem,4vw,3rem);font-weight:700;
+  color:var(--text-strong);line-height:1.2;
+  text-wrap:balance;margin-bottom:1.5rem;
+  position:relative;z-index:1;
+}
+.slide-title span{color:var(--accent)}
+
+/* ─── Content helpers ─── */
+.content{flex:1;display:flex;flex-direction:column;gap:1.2rem;position:relative;z-index:1}
+.row{display:flex;gap:1.2rem;flex-wrap:wrap}
+.col{flex:1;min-width:200px}
+
+/* Cards */
+.card{
+  background:var(--bg-card);border:1px solid var(--border-soft);border-radius:12px;
+  padding:1.2rem 1.4rem;
+}
+.card-accent{border-color:var(--accent);box-shadow:0 0 0 1px var(--border),inset 0 0 30px var(--accent-glow)}
+.card-warm{border-color:var(--accent-2);box-shadow:0 0 0 1px rgba(255,107,71,.3),inset 0 0 30px var(--accent-glow2)}
+.card h3{font-size:1rem;font-weight:700;color:var(--text-strong);margin-bottom:0.6rem}
+.card p{font-size:0.9rem;color:var(--text-muted);line-height:1.7}
+.card ul{list-style:none;padding:0}
+.card ul li{font-size:0.88rem;color:var(--text);padding:0.25rem 0;display:flex;align-items:center;gap:0.5rem}
+.card ul li::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+
+/* Big highlight box */
+.highlight-box{
+  background:var(--accent-glow);border:1px solid var(--border);border-radius:12px;
+  padding:1.2rem 1.6rem;text-align:center;
+}
+.highlight-box .big{font-size:clamp(1.2rem,2.5vw,1.6rem);font-weight:700;color:var(--text-strong)}
+.highlight-box .sub{font-size:0.85rem;color:var(--text-muted);margin-top:0.3rem}
+
+/* Separation grid */
+.sep-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.8rem}
+.sep-item{
+  background:var(--bg-card);border:1px solid var(--border-soft);border-radius:10px;
+  padding:1rem;text-align:center;
+}
+.sep-item .label{font-size:0.75rem;color:var(--text-muted);font-weight:600;letter-spacing:0.1em;margin-bottom:0.3rem}
+.sep-item .val{font-size:1rem;font-weight:700;color:var(--text-strong)}
+.sep-arrow{display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:var(--text-muted)}
+
+/* Flow diagrams */
+.flow{display:flex;flex-direction:column;align-items:center;gap:0;width:100%}
+.flow-item{
+  background:var(--bg-card);border:1px solid var(--border-soft);border-radius:8px;
+  padding:0.6rem 1.2rem;font-size:0.9rem;font-weight:600;color:var(--text);
+  text-align:center;min-width:200px;
+}
+.flow-item.hi{border-color:var(--accent);background:var(--accent-glow);color:var(--text-strong)}
+.flow-item.hi2{border-color:var(--accent-2);background:var(--accent-glow2);color:var(--text-strong)}
+.flow-arrow-v{color:var(--accent);font-size:1.2rem;line-height:1;padding:0.2rem 0;text-align:center}
+
+/* Two flows side by side */
+.flow-pair{display:flex;gap:2rem;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+.flow-section{display:flex;flex-direction:column;align-items:center;gap:0}
+.flow-section-label{font-size:0.7rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.8rem}
+
+/* Code blocks */
+pre.code{
+  background:var(--bg-code);border:1px solid var(--border-soft);border-radius:10px;
+  border-right:3px solid var(--accent);
+  padding:1rem 1.2rem;overflow-x:auto;
+  font-family:'SF Mono','Fira Mono','JetBrains Mono',Consolas,monospace;
+  font-size:0.82rem;line-height:1.7;color:var(--code-text);
+  direction:ltr;text-align:left;
+}
+pre.code .kw{color:#B57BFF}
+pre.code .cm{color:#FF6B8A}
+pre.code .st{color:var(--success)}
+pre.code .nm{color:#6BD7FF}
+
+/* Directory tree */
+.tree{
+  background:var(--bg-code);border:1px solid var(--border-soft);border-radius:10px;
+  border-right:3px solid var(--accent);padding:1rem 1.2rem;
+  font-family:'SF Mono','Fira Mono',Consolas,monospace;font-size:0.82rem;
+  line-height:1.8;color:var(--code-text);direction:ltr;text-align:left;
+}
+.tree .root{color:var(--text-strong);font-weight:700}
+.tree .hi{color:var(--accent)}
+.tree .hi2{color:var(--accent-2)}
+.tree .dim{color:var(--text-muted)}
+
+/* Comparison */
+.vs-grid{display:flex;gap:1rem;align-items:stretch;flex-wrap:wrap}
+.vs-card{flex:1;min-width:180px;background:var(--bg-card);border:1px solid var(--border-soft);border-radius:12px;padding:1.1rem}
+.vs-card.a{border-color:var(--accent);box-shadow:inset 0 0 20px var(--accent-glow)}
+.vs-card.b{border-color:var(--accent-2);box-shadow:inset 0 0 20px var(--accent-glow2)}
+.vs-card .vt{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.12em;font-weight:700;color:var(--text-muted);margin-bottom:0.4rem}
+.vs-card .vh{font-size:1rem;font-weight:700;color:var(--text-strong);margin-bottom:0.6rem}
+.vs-sep{display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:var(--text-muted);padding:0 0.5rem;flex-shrink:0}
+.vs-card ul{list-style:none;padding:0}
+.vs-card ul li{font-size:0.83rem;color:var(--text);padding:0.2rem 0}
+.vs-card ul li::before{content:'• ';color:var(--accent)}
+.vs-card.b ul li::before{color:var(--accent-2)}
+
+/* Mistake cards */
+.mistakes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0.75rem}
+.mistake{background:var(--bg-card);border:1px solid var(--border-soft);border-radius:10px;padding:0.9rem 1rem}
+.mistake .wrong{font-size:0.78rem;color:var(--accent-2);font-family:'SF Mono',Consolas,monospace;margin-bottom:0.35rem;display:flex;gap:0.4rem;align-items:center}
+.mistake .right{font-size:0.83rem;color:var(--text);line-height:1.5}
+.mistake .badge{font-size:0.65rem;background:rgba(255,107,71,.15);color:var(--accent-2);border-radius:4px;padding:0.1rem 0.4rem;font-weight:700}
+
+/* Questions list */
+.q-list{display:flex;flex-direction:column;gap:0.6rem}
+.q-item{display:flex;gap:0.8rem;align-items:flex-start;background:var(--bg-card);border-radius:8px;padding:0.7rem 0.9rem;border:1px solid var(--border-soft)}
+.q-num{font-size:0.7rem;font-weight:900;color:var(--accent);width:1.5rem;flex-shrink:0;padding-top:0.1rem;font-variant-numeric:tabular-nums}
+.q-text{font-size:0.88rem;color:var(--text)}
+
+/* Glossary */
+.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.6rem}
+.gterm{background:var(--bg-card);border-radius:8px;padding:0.7rem 0.9rem;border:1px solid var(--border-soft)}
+.gterm .gt{font-family:'SF Mono',Consolas,monospace;font-size:0.8rem;color:var(--accent);font-weight:700;margin-bottom:0.25rem}
+.gterm .gd{font-size:0.82rem;color:var(--text-muted)}
+
+/* Inheritance visual */
+.inherit-diagram{display:flex;flex-direction:column;align-items:center;gap:0;width:100%}
+.ibox{
+  border-radius:10px;padding:0.7rem 1.4rem;font-size:0.85rem;font-weight:600;text-align:center;
+}
+.ibox.layout{background:var(--accent-glow);border:2px solid var(--accent);color:var(--text-strong);min-width:220px}
+.ibox.page{background:var(--accent-glow2);border:2px solid var(--accent-2);color:var(--text-strong);min-width:180px}
+.ibox.content{background:var(--bg-card);border:1px solid var(--border-soft);color:var(--text);min-width:160px;font-size:0.8rem}
+.ibox.slot{background:repeating-linear-gradient(45deg,var(--bg-card),var(--bg-card) 5px,var(--border-soft) 5px,var(--border-soft) 6px);border:1px dashed var(--border);color:var(--text-muted);font-style:italic}
+.iconn{color:var(--accent);font-size:1.1rem;line-height:1;padding:0.15rem 0;text-align:center}
+
+/* Layout sections visual */
+.layout-visual{display:flex;flex-direction:column;gap:0;border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+.lv-row{padding:0.6rem 1rem;font-size:0.83rem;font-weight:600;text-align:center}
+.lv-header{background:var(--accent-glow);border-bottom:1px solid var(--border);color:var(--accent)}
+.lv-content{background:var(--bg-card);border-bottom:1px solid var(--border);color:var(--text);padding:1.2rem 1rem;font-style:italic;color:var(--text-muted)}
+.lv-footer{background:var(--accent-glow);color:var(--accent)}
+
+/* Navigation */
+.nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0.6rem 1.5rem;
+  background:linear-gradient(to top, var(--bg) 60%, transparent);
+}
+.nav-btn{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-size:1.1rem;padding:0.4rem 0.9rem;cursor:pointer;
+  transition:all 0.2s;font-family:'Cairo',sans-serif;
+}
+.nav-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 16px var(--accent-glow)}
+.nav-btn:disabled{opacity:0.3;cursor:not-allowed}
+.nav-center{display:flex;flex-direction:column;align-items:center;gap:0.3rem}
+.nav-counter{font-size:0.75rem;color:var(--text-muted);font-variant-numeric:tabular-nums;font-weight:600}
+.nav-dots{display:flex;gap:0.3rem;flex-wrap:wrap;justify-content:center;max-width:200px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--border);cursor:pointer;transition:all 0.2s;flex-shrink:0}
+.dot.active{background:var(--accent);box-shadow:0 0 8px var(--accent);width:18px;border-radius:3px}
+
+/* Slide title splash */
+.splash{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;height:100%;gap:1.5rem}
+.splash .eyebrow{font-size:0.75rem;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:var(--accent)}
+.splash .main-title{font-size:clamp(2.5rem,7vw,5rem);font-weight:900;color:var(--text-strong);line-height:1.1;text-wrap:balance}
+.splash .sub-title{font-size:clamp(1rem,2vw,1.3rem);color:var(--text-muted);font-weight:400;max-width:600px;line-height:1.7}
+.splash .tags{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center}
+.tag{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;padding:0.3rem 0.7rem;border-radius:100px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted)}
+
+/* Accent line */
+.accent-line{width:3rem;height:3px;background:var(--accent);border-radius:2px;margin-bottom:0.5rem}
+.accent-line.center{margin-left:auto;margin-right:auto}
+
+/* Section divider */
+.divider{height:1px;background:var(--border-soft);margin:0.5rem 0}
+
+/* Goal list */
+.goal-list{display:flex;flex-direction:column;gap:0.6rem}
+.goal-item{display:flex;gap:0.8rem;align-items:flex-start}
+.goal-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:0.4rem;box-shadow:0 0 8px var(--accent)}
+.goal-text{font-size:0.95rem;color:var(--text);line-height:1.6}
+.goal-text code{font-family:'SF Mono',Consolas,monospace;font-size:0.8rem;background:var(--bg-code);padding:0.1rem 0.4rem;border-radius:4px;color:var(--accent)}
+
+/* Final mental model big diagram */
+.final-flow{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.final-col{display:flex;flex-direction:column;align-items:center;gap:0}
+.final-col-label{font-size:0.65rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.6rem}
+
+/* Reduced motion */
+@media(prefers-reduced-motion:reduce){.slide{transition:opacity 0.2s ease}}
+</style>
+</head>
+<body>
+<div class="presentation">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="slides" id="slidesContainer">
+
+    <!-- ─── SLIDE 1 — Title ─── -->
+    <div class="slide active">
+      <div class="slide-num-watermark">01</div>
+      <div class="splash">
+        <div>
+          <div class="eyebrow">Salla Twilight Theme Development</div>
+          <div class="main-title">اليوم الأول</div>
+          <div style="margin:1rem auto 0;width:4rem;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:2px"></div>
+        </div>
+        <div class="sub-title">
+          Architecture · Repository Orientation · Layouts · Pages · Home Trace · <code style="font-family:'SF Mono',Consolas,monospace;font-size:0.85em">twilight.json</code>
+        </div>
+        <div class="tags">
+          <span class="tag">Mental Model</span>
+          <span class="tag">Twig Rendering</span>
+          <span class="tag">Template Inheritance</span>
+          <span class="tag">Configuration vs Rendering</span>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem">استخدم أسهم لوحة المفاتيح ← → أو الأزرار أسفل الشاشة</div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 2 — هدف اليوم ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">02</div>
+      <div class="slide-label">الهدف</div>
+      <h1 class="slide-title">ماذا نبني اليوم؟</h1>
+      <div class="content">
+        <div class="highlight-box" style="margin-bottom:0.5rem">
+          <div class="big">Mental Model صحيح لمنظومة Salla Twilight</div>
+          <div class="sub">قبل الدخول في كتابة Features حقيقية</div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <h3>بعد اليوم ده، لأي Requirement هتبدأ تسأل:</h3>
+        </div>
+        <div class="goal-list">
+          <div class="goal-item"><div class="goal-dot"></div><div class="goal-text">هل ده Store data ولا Theme configuration؟</div></div>
+          <div class="goal-item"><div class="goal-dot"></div><div class="goal-text">هل التغيير Page-specific ولا Shared؟</div></div>
+          <div class="goal-item"><div class="goal-dot"></div><div class="goal-text">هل مكانه Layout ولا Page ولا Component؟</div></div>
+          <div class="goal-item"><div class="goal-dot"></div><div class="goal-text">هل ده Rendering responsibility في Twig؟</div></div>
+          <div class="goal-item"><div class="goal-dot"></div><div class="goal-text">هل محتاج JavaScript؟</div></div>
+          <div class="goal-item"><div class="goal-dot"></div><div class="goal-text">هل فيه Merchant configuration وبالتالي <code>twilight.json</code> له دور؟</div></div>
+          <div class="goal-item"><div class="goal-dot"></div><div class="goal-text">هل دي حاجة تخص Theme runtime أصلًا، ولا مجرد Development tooling زي Salla CLI؟</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 3 — الصورة الكبيرة ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">03</div>
+      <div class="slide-label">Architecture</div>
+      <h1 class="slide-title">الصورة الكبيرة — <span>Mental Model</span></h1>
+      <div class="content">
+        <div class="flow-pair">
+          <div>
+            <div class="flow-section-label">🌐 Storefront Runtime</div>
+            <div class="flow-section">
+              <div class="flow-item hi">Storefront Request</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item">Salla / Twilight</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item" style="line-height:1.6;padding:0.7rem 1rem;font-size:0.8rem">Store Data<br>+ Merchant Config<br>+ Active Theme Files</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item">Twig Rendering</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item hi">HTML + Web Components</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item">Browser: CSS + JavaScript</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item hi2">Rendered Storefront</div>
+            </div>
+          </div>
+          <div>
+            <div class="flow-section-label">🛠 Development Workflow</div>
+            <div class="flow-section">
+              <div class="flow-item hi2">Developer</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item">Theme Repository</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item">Salla CLI</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item hi2">Preview / Watch / Local Dev</div>
+            </div>
+            <div class="card" style="margin-top:1rem;border-color:var(--accent-2)">
+              <p style="font-size:0.8rem">⚠️ الرسم الأول Mental Model تعليمي لفهم المسؤوليات، وليس وصفًا حرفيًا لكل internal pipeline.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 4 — أهم فصل ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">04</div>
+      <div class="slide-label">المفهوم الأساسي</div>
+      <h1 class="slide-title">أهم فصل لازم يثبت</h1>
+      <div class="content">
+        <div class="row" style="align-items:center;justify-content:center">
+          <div class="sep-item"><div class="label">المتجر الفعلي وبياناته</div><div class="val" style="color:var(--accent)">Store</div></div>
+          <div class="sep-arrow">≠</div>
+          <div class="sep-item"><div class="label">ملفات العرض والـPresentation</div><div class="val" style="color:var(--success)">Theme</div></div>
+          <div class="sep-arrow">≠</div>
+          <div class="sep-item"><div class="label">المحرك الذي يشغّل الثيم</div><div class="val" style="color:var(--accent-2)">Twilight</div></div>
+          <div class="sep-arrow">≠</div>
+          <div class="sep-item"><div class="label">أداة التطوير المحلية</div><div class="val" style="color:#FFD166">Salla CLI</div></div>
+        </div>
+        <div class="row">
+          <div class="card col card-accent">
+            <h3 style="color:var(--accent)">Store</h3>
+            <p>"What does this store actually contain?"<br>المنتجات، الأسعار، بيانات العملاء — حالة المنصة</p>
+          </div>
+          <div class="card col" style="border-color:var(--success);box-shadow:inset 0 0 20px rgba(72,255,168,.1)">
+            <h3 style="color:var(--success)">Theme</h3>
+            <p>"How should this storefront be presented and behave?"<br>ملفات Twig, CSS, JS — طبقة العرض</p>
+          </div>
+          <div class="card col card-warm">
+            <h3 style="color:var(--accent-2)">Twilight</h3>
+            <p>Theme Engine الخاص بـSalla<br>يشغّل الثيم ويحوّل Templates إلى HTML</p>
+          </div>
+          <div class="card col" style="border-color:#FFD166;box-shadow:inset 0 0 20px rgba(255,209,102,.08)">
+            <h3 style="color:#FFD166">Salla CLI</h3>
+            <p>Development tooling فقط<br>لا يعمل في Production runtime</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 5 — Store Data vs Merchant Config ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">05</div>
+      <div class="slide-label">بيانات vs إعدادات</div>
+      <h1 class="slide-title">Store Data <span>vs</span> Merchant Configuration</h1>
+      <div class="content">
+        <div class="highlight-box" style="background:var(--accent-glow);margin-bottom:0">
+          <div class="big">من أهم الفروق في Twilight</div>
+        </div>
+        <div class="vs-grid">
+          <div class="vs-card a">
+            <div class="vt">Store Data</div>
+            <div class="vh">ما الذي يحتويه المتجر؟</div>
+            <ul>
+              <li>Product Name</li>
+              <li>Price</li>
+              <li>Images & Availability</li>
+              <li>Store Information</li>
+              <li>Customer Data</li>
+            </ul>
+          </div>
+          <div class="vs-sep">vs</div>
+          <div class="vs-card b">
+            <div class="vt">Merchant Configuration</div>
+            <div class="vh">كيف ضبط التاجر الثيم؟</div>
+            <ul>
+              <li>Show breadcrumbs?</li>
+              <li>Primary color</li>
+              <li>Section title</li>
+              <li>Banner image</li>
+              <li>Show/Hide theme options</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card" style="background:var(--bg-code)">
+          <h3>مثال عملي</h3>
+          <div class="row" style="gap:1rem;margin-top:0.5rem">
+            <div style="flex:1;font-size:0.85rem;color:var(--text)">
+              المتجر عنده:<br>
+              <span style="color:var(--accent);font-family:'SF Mono',monospace">Product: Ethiopian Coffee</span><br>
+              <span style="color:var(--accent);font-family:'SF Mono',monospace">Price: 80 SAR</span>
+            </div>
+            <div style="flex:1;font-size:0.85rem;color:var(--text)">
+              والتاجر اختار في الثيم:<br>
+              <span style="color:var(--accent-2);font-family:'SF Mono',monospace">Show Rating = true</span>
+            </div>
+          </div>
+          <p style="margin-top:0.8rem;font-size:0.82rem;color:var(--text-muted)">الاتنين ممكن يدخلوا في عملية الـrender، لكن مصدرهم ومسؤوليتهم مختلفين.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 6 — Twilight Engine ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">06</div>
+      <div class="slide-label">Theme Engine</div>
+      <h1 class="slide-title">Twilight Engine — <span>ليه موجود؟</span></h1>
+      <div class="content">
+        <div class="highlight-box card-accent" style="padding:1.5rem">
+          <div class="big" style="font-size:2rem">Twilight runs the Theme.</div>
+          <div class="sub" style="font-size:1rem;margin-top:0.5rem">مش الثيم نفسه · مش Salla CLI</div>
+        </div>
+        <div class="row">
+          <div class="card col card-accent">
+            <h3>Conceptually يستخدم:</h3>
+            <ul>
+              <li>Store Data</li>
+              <li>Merchant Configuration</li>
+              <li>Theme Templates</li>
+            </ul>
+          </div>
+          <div class="card col">
+            <h3>ليه Twilight ضروري؟</h3>
+            <p style="margin-bottom:0.6rem">المتصفح لا يفهم Twig syntax مثل:</p>
+            <pre class="code" style="font-size:0.78rem"><span class="kw">{% extends "layouts.master" %}</span>
+<span class="kw">{% if product.available %}</span>
+<span class="cm">{{ product.name }}</span></pre>
+            <p style="margin-top:0.6rem;font-size:0.82rem;color:var(--text-muted)">الـTwig templates لازم يتحولوا لـHTML قبل ما يوصلوا للمتصفح.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 7 — Theme Repository Structure ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">07</div>
+      <div class="slide-label">Theme Repository</div>
+      <h1 class="slide-title">هيكل ملفات الثيم</h1>
+      <div class="content">
+        <div class="row">
+          <div class="col">
+            <div class="tree">
+              <div class="root">my-theme/</div>
+              <div>│</div>
+              <div>├── <span class="hi">twilight.json</span></div>
+              <div>│</div>
+              <div>└── <span class="hi2">src/</span></div>
+              <div>    ├── <span class="hi">views/</span></div>
+              <div>    │   ├── layouts/</div>
+              <div>    │   ├── pages/</div>
+              <div>    │   └── components/</div>
+              <div>    │</div>
+              <div>    ├── <span class="hi">assets/</span></div>
+              <div>    │   ├── js/</div>
+              <div>    │   └── styles/</div>
+              <div>    │</div>
+              <div>    └── <span class="hi">locales/</span></div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card" style="margin-bottom:0.8rem">
+              <h3>فكر في <code style="font-family:'SF Mono',monospace;color:var(--accent)">src/</code> كده:</h3>
+            </div>
+            <div class="card" style="margin-bottom:0.5rem;border-color:var(--accent)">
+              <div style="font-family:'SF Mono',monospace;font-size:0.82rem;color:var(--accent)">views/</div>
+              <p style="font-size:0.85rem">What gets rendered?</p>
+            </div>
+            <div class="card" style="margin-bottom:0.5rem;border-color:var(--accent-2)">
+              <div style="font-family:'SF Mono',monospace;font-size:0.82rem;color:var(--accent-2)">assets/</div>
+              <p style="font-size:0.85rem">How does it look and behave in the browser?</p>
+            </div>
+            <div class="card" style="border-color:var(--success)">
+              <div style="font-family:'SF Mono',monospace;font-size:0.82rem;color:var(--success)">locales/</div>
+              <p style="font-size:0.85rem">How are translatable strings handled?</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 8 — Directory Responsibilities ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">08</div>
+      <div class="slide-label">Directory Responsibilities</div>
+      <h1 class="slide-title">مسؤولية كل مجلد</h1>
+      <div class="content">
+        <div class="row">
+          <div class="card col" style="border-color:var(--accent)">
+            <div class="gt" style="font-family:'SF Mono',monospace;font-size:0.85rem;color:var(--accent);font-weight:700">layouts/</div>
+            <p style="font-size:0.85rem">Shared page skeletons — الهيكل المشترك بين Pages متعددة (Header, Footer, Shell)</p>
+          </div>
+          <div class="card col">
+            <div class="gt" style="font-family:'SF Mono',monospace;font-size:0.85rem;color:var(--accent);font-weight:700">pages/</div>
+            <p style="font-size:0.85rem">Templates for specific storefront pages — Home, Product, Cart, Blog…</p>
+          </div>
+          <div class="card col">
+            <div class="gt" style="font-family:'SF Mono',monospace;font-size:0.85rem;color:var(--accent);font-weight:700">components/</div>
+            <p style="font-size:0.85rem">Reusable / organized Theme UI pieces — Product Card, Header, Footer sections</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="card col" style="border-color:var(--accent-2)">
+            <div class="gt" style="font-family:'SF Mono',monospace;font-size:0.85rem;color:var(--accent-2);font-weight:700">assets/js/</div>
+            <p style="font-size:0.85rem">Browser-side interactions — Event listeners, Menus, Drawers, Modals, DOM interactions</p>
+          </div>
+          <div class="card col" style="border-color:var(--accent-2)">
+            <div class="gt" style="font-family:'SF Mono',monospace;font-size:0.85rem;color:var(--accent-2);font-weight:700">assets/styles/</div>
+            <p style="font-size:0.85rem">Styling — Typography, Colors, Spacing, Responsive, RTL/LTR, Animations</p>
+          </div>
+          <div class="card col" style="border-color:var(--success)">
+            <div class="gt" style="font-family:'SF Mono',monospace;font-size:0.85rem;color:var(--success);font-weight:700">locales/</div>
+            <p style="font-size:0.85rem">Translation strings — <span style="font-family:monospace;font-size:0.8rem">ar.json</span>, <span style="font-family:monospace;font-size:0.8rem">en.json</span> — لكن RTL layout → styles concern أيضًا</p>
+          </div>
+        </div>
+        <div class="card card-warm" style="font-size:0.85rem">
+          <strong>⚠️ Feature واحدة = أكثر من Layer</strong> — مثلاً Mega Menu: Header Component + JavaScript + Styles + Theme Settings + Localization
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 9 — Layout vs Page ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">09</div>
+      <div class="slide-label">Template Inheritance</div>
+      <h1 class="slide-title">Layout <span>vs</span> Page</h1>
+      <div class="content">
+        <div class="row">
+          <div class="col" style="display:flex;flex-direction:column;align-items:center;gap:0">
+            <div style="font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.6rem">التدرج</div>
+            <div class="ibox page">Page (index.twig)</div>
+            <div class="iconn">↓ extends</div>
+            <div class="ibox layout">Layout (master.twig)</div>
+          </div>
+          <div class="col">
+            <div style="font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.6rem">النتيجة المركّبة</div>
+            <div class="layout-visual">
+              <div class="lv-row lv-header">Header (shared from layout)</div>
+              <div class="lv-row lv-content">[ Page Content Slot ]<br><span style="font-size:0.75rem">الـPage تملأ هنا</span></div>
+              <div class="lv-row lv-footer">Footer (shared from layout)</div>
+            </div>
+          </div>
+          <div class="col">
+            <div style="font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.6rem">ليه؟</div>
+            <div class="card" style="height:calc(100% - 1.5rem)">
+              <h3>بدون Layout:</h3>
+              <ul>
+                <li>نكرر Header في كل Page</li>
+                <li>نكرر Footer في كل Page</li>
+                <li>نكرر Global assets</li>
+                <li>أي تغيير global = تعديل كل ملفات</li>
+              </ul>
+              <div class="divider" style="margin:0.8rem 0"></div>
+              <h3>مع Layout inheritance:</h3>
+              <ul>
+                <li>Less duplication</li>
+                <li>Clear shared structure</li>
+                <li>Easier global changes</li>
+                <li>Better separation</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 10 — master.twig + Blocks ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">10</div>
+      <div class="slide-label">Twig Blocks</div>
+      <h1 class="slide-title"><code style="font-family:'SF Mono',monospace;font-size:0.85em">master.twig</code> — يعني إيه Block؟</h1>
+      <div class="content">
+        <div class="row">
+          <div class="col">
+            <pre class="code"><span class="dim">&lt;!DOCTYPE html&gt;</span>
+<span class="dim">&lt;html&gt;&lt;head&gt;...&lt;/head&gt;
+&lt;body&gt;</span>
+
+  <span class="nm">{% component 'header.header' %}</span>
+
+  <span class="dim">&lt;main&gt;</span>
+    <span class="kw">{% block content %}</span>
+    <span class="kw">{% endblock %}</span>
+  <span class="dim">&lt;/main&gt;</span>
+
+  <span class="nm">{% component 'footer.footer' %}</span>
+
+<span class="dim">&lt;/body&gt;&lt;/html&gt;</span></pre>
+          </div>
+          <div class="col" style="display:flex;flex-direction:column;gap:0.8rem">
+            <div class="highlight-box card-accent">
+              <div class="big">Block = Named Slot</div>
+              <div class="sub">Customization point داخل Template Inheritance system</div>
+            </div>
+            <div class="card">
+              <h3>Block ≠ Component</h3>
+              <div class="row" style="gap:0.6rem;margin-top:0.5rem">
+                <div style="flex:1;text-align:center;padding:0.6rem;background:var(--accent-glow);border-radius:8px;border:1px solid var(--border)">
+                  <div style="font-family:'SF Mono',monospace;font-size:0.75rem;color:var(--accent)">Block</div>
+                  <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.3rem">Slot — حاجة فاضية تتملى</div>
+                </div>
+                <div style="flex:1;text-align:center;padding:0.6rem;background:var(--accent-glow2);border-radius:8px;border:1px solid rgba(255,107,71,.3)">
+                  <div style="font-family:'SF Mono',monospace;font-size:0.75rem;color:var(--accent-2)">Component</div>
+                  <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.3rem">قطعة UI جاهزة ومكتملة</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <h3>مش كل Page لازم تستخدم master.twig</h3>
+              <p>ممكن يكون عندك layouts مختلفة لـPage families ذات structures مختلفة.</p>
+              <pre class="code" style="margin-top:0.6rem;font-size:0.78rem">layouts/master.twig
+layouts/customer.twig</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 11 — Home Page Trace ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">11</div>
+      <div class="slide-label">Home Page Trace</div>
+      <h1 class="slide-title">Trace الـHome Page — خطوة بخطوة</h1>
+      <div class="content">
+        <div class="row">
+          <div class="col">
+            <div class="flow-section" style="align-items:stretch">
+              <div class="flow-item hi" style="text-align:center">User opens Home</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item">Twilight resolves Home page template</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item" style="font-family:'SF Mono',monospace;font-size:0.82rem">src/views/pages/index.twig</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item">index.twig extends layouts.master</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item">master.twig provides shared shell</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item" style="font-size:0.82rem;line-height:1.6">index.twig fills:<br>content → Home content<br>scripts → home.js</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item">Twig Rendering → HTML output</div>
+              <div class="flow-arrow-v">↓</div>
+              <div class="flow-item hi2">Browser</div>
+            </div>
+          </div>
+          <div class="col">
+            <pre class="code"><span class="kw">{% extends "layouts.master" %}</span>
+
+<span class="kw">{% block content %}</span>
+  <span class="nm">{% component home %}</span>
+<span class="kw">{% endblock %}</span>
+
+<span class="kw">{% block scripts %}</span>
+  <span class="dim">&lt;script src="home.js"&gt;&lt;/script&gt;</span>
+<span class="kw">{% endblock %}</span></pre>
+            <div class="card" style="margin-top:0.8rem">
+              <h3>app.js vs home.js</h3>
+              <div style="font-size:0.83rem;color:var(--text);margin-top:0.5rem">
+                <div style="display:flex;gap:0.6rem;margin-bottom:0.4rem">
+                  <span style="color:var(--accent);font-family:monospace">master.twig →</span>
+                  <span style="color:var(--text-muted)">app.js (global behavior)</span>
+                </div>
+                <div style="display:flex;gap:0.6rem">
+                  <span style="color:var(--accent-2);font-family:monospace">index.twig →</span>
+                  <span style="color:var(--text-muted)">home.js (Home-specific)</span>
+                </div>
+              </div>
+              <p style="margin-top:0.6rem;font-size:0.8rem;color:var(--text-muted)">الفكرة هي <strong>Scope</strong> — مش أسماء ملفات إجبارية.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 12 — twilight.json ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">12</div>
+      <div class="slide-label">Theme Configuration</div>
+      <h1 class="slide-title"><code style="font-family:'SF Mono',monospace;font-size:0.8em">twilight.json</code> — الملف الأهم</h1>
+      <div class="content">
+        <div class="row">
+          <div class="col">
+            <div class="tree">
+              <span class="hi">twilight.json</span>
+              <div>│</div>
+              <div>├── Theme Information</div>
+              <div>│      ↓</div>
+              <div>│   <span class="dim">"What is this theme?"</span></div>
+              <div>│</div>
+              <div>├── settings</div>
+              <div>│      ↓</div>
+              <div>│   <span class="dim">"Theme-level configurable options"</span></div>
+              <div>│</div>
+              <div>├── features</div>
+              <div>│      ↓</div>
+              <div>│   <span class="dim">"Predefined Twilight features declared"</span></div>
+              <div>│</div>
+              <div>└── components</div>
+              <div>       ↓</div>
+              <div>    <span class="dim">"Custom merchant-configurable components"</span></div>
+              <div>       ├── path → Twig implementation</div>
+              <div>       └── fields → Merchant config</div>
+            </div>
+          </div>
+          <div class="col" style="display:flex;flex-direction:column;gap:0.7rem">
+            <div class="card" style="border-color:var(--accent)">
+              <h3>settings</h3>
+              <p style="font-size:0.85rem">Theme-level/global configuration — قيم يضبطها التاجر للثيم كله</p>
+              <pre class="code" style="margin-top:0.5rem;font-size:0.75rem">show_sale_badge: true
+primary_font: "Cairo"</pre>
+            </div>
+            <div class="card">
+              <h3>features</h3>
+              <p style="font-size:0.85rem">Predefined Twilight capabilities — الثيم يُعلن أنه يدعمها حسب الـschema الرسمي</p>
+            </div>
+            <div class="card card-warm">
+              <h3>components</h3>
+              <p style="font-size:0.85rem">Custom components يعرّفها Developer الثيم — مع fields قابلة للضبط من التاجر</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 13 — Component Definition vs Twig ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">13</div>
+      <div class="slide-label">Configuration vs Rendering</div>
+      <h1 class="slide-title">Component Definition <span>vs</span> Twig File</h1>
+      <div class="content">
+        <div class="highlight-box" style="background:var(--accent-glow)">
+          <div class="big">هنا أهم فكرة في اليوم</div>
+        </div>
+        <div class="vs-grid">
+          <div class="vs-card a">
+            <div class="vt">twilight.json</div>
+            <div class="vh">Configuration / Schema / Declaration</div>
+            <p style="font-size:0.83rem;color:var(--text-muted)">يجاوب على: ما هو الـComponent؟ فين الـTwig؟ إيه الـfields القابلة للضبط؟</p>
+          </div>
+          <div class="vs-sep">≠</div>
+          <div class="vs-card b">
+            <div class="vt">Twig Component File</div>
+            <div class="vh">Rendering Implementation</div>
+            <p style="font-size:0.83rem;color:var(--text-muted)">يجاوب على: كيف يتم عرض الـComponent؟ إيه الـmarkup؟</p>
+          </div>
+        </div>
+        <div class="card" style="background:var(--bg-code)">
+          <h3>مثال: Promo Banner</h3>
+          <div class="row" style="gap:1rem;margin-top:0.7rem">
+            <div class="col">
+              <div style="font-size:0.75rem;color:var(--accent);margin-bottom:0.4rem;font-family:monospace">twilight.json</div>
+              <pre class="code" style="font-size:0.75rem"><span class="st">{</span>
+  <span class="kw">"name"</span>: <span class="nm">"Promo Banner"</span>,
+  <span class="kw">"path"</span>: <span class="nm">"home.promo-banner"</span>,
+  <span class="kw">"fields"</span>: [
+    <span class="nm">"title"</span>, <span class="nm">"image"</span>
+  ]
+<span class="st">}</span></pre>
+            </div>
+            <div class="col">
+              <div style="font-size:0.75rem;color:var(--accent-2);margin-bottom:0.4rem;font-family:monospace">components/home/promo-banner.twig</div>
+              <pre class="code" style="font-size:0.75rem"><span class="dim">&lt;section&gt;</span>
+  <span class="dim">&lt;h2&gt;</span><span class="cm">{{ component.title }}</span><span class="dim">&lt;/h2&gt;</span>
+  <span class="dim">&lt;img src="</span><span class="cm">{{ component.image }}</span><span class="dim">"&gt;</span>
+<span class="dim">&lt;/section&gt;</span></pre>
+            </div>
+          </div>
+          <p style="margin-top:0.8rem;font-size:0.8rem;color:var(--text-muted)">الـ<code style="font-family:monospace;color:var(--accent)">path</code> هو حلقة الربط بين الـjson definition والـTwig file</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 14 — أخطاء شائعة ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">14</div>
+      <div class="slide-label">Common Mistakes</div>
+      <h1 class="slide-title">أخطاء لازم تتجنبها</h1>
+      <div class="content">
+        <div class="mistakes">
+          <div class="mistake">
+            <div class="wrong"><span class="badge">خطأ ١</span> Theme = Store</div>
+            <div class="right">Store = Data · Theme = Presentation</div>
+          </div>
+          <div class="mistake">
+            <div class="wrong"><span class="badge">خطأ ٢</span> Twilight = Theme</div>
+            <div class="right">Twilight = Theme Engine · Theme = Files executed within Twilight</div>
+          </div>
+          <div class="mistake">
+            <div class="wrong"><span class="badge">خطأ ٣</span> Salla CLI = Runtime</div>
+            <div class="right">CLI = Dev tooling فقط · Runtime = Salla/Twilight + Active Theme</div>
+          </div>
+          <div class="mistake">
+            <div class="wrong"><span class="badge">خطأ ٤</span> Page = Layout</div>
+            <div class="right">Layout = Shared shell · Page = Specific content template</div>
+          </div>
+          <div class="mistake">
+            <div class="wrong"><span class="badge">خطأ ٥</span> Block = Component</div>
+            <div class="right">Block = Template inheritance slot · Component = Reusable UI unit</div>
+          </div>
+          <div class="mistake">
+            <div class="wrong"><span class="badge">خطأ ٦</span> Theme Component = Salla Web Component</div>
+            <div class="right">Theme/Twig Component = template-side · Salla Web Component = Browser Custom Element</div>
+          </div>
+          <div class="mistake">
+            <div class="wrong"><span class="badge">خطأ ٧</span> twilight.json = UI file</div>
+            <div class="right">twilight.json = Configuration/Schema · Twig = Rendering Implementation</div>
+          </div>
+          <div class="mistake">
+            <div class="wrong"><span class="badge">خطأ ٨</span> Global = كل حاجة في master.twig</div>
+            <div class="right">Global scope → inspect shared composition → ضع كل responsibility في الـlayer المناسبة</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 15 — Architecture Preflight ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">15</div>
+      <div class="slide-label">Architecture Preflight</div>
+      <h1 class="slide-title">قبل أي Feature — <span>اسأل</span> الأسئلة دي</h1>
+      <div class="content">
+        <div class="row">
+          <div class="col">
+            <div class="q-list">
+              <div class="q-item"><div class="q-num">01</div><div class="q-text">Where does this feature belong?</div></div>
+              <div class="q-item"><div class="q-num">02</div><div class="q-text">What data does it require?</div></div>
+              <div class="q-item"><div class="q-num">03</div><div class="q-text">What is Twig responsible for?</div></div>
+              <div class="q-item"><div class="q-num">04</div><div class="q-text">What is JavaScript responsible for?</div></div>
+              <div class="q-item"><div class="q-num">05</div><div class="q-text">Do we need a Salla Web Component?</div></div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="q-list">
+              <div class="q-item"><div class="q-num">06</div><div class="q-text">Does it need twilight.json / Merchant Settings?</div></div>
+              <div class="q-item"><div class="q-num">07</div><div class="q-text">What is the styling responsibility?</div></div>
+              <div class="q-item"><div class="q-num">08</div><div class="q-text">How broad is the scope?</div></div>
+              <div class="q-item"><div class="q-num">09</div><div class="q-text">What files depend on the thing I will change?</div></div>
+              <div class="q-item"><div class="q-num">10</div><div class="q-text">How will I verify/debug it?</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card card-warm" style="margin-top:0">
+          <strong>بدل ما تسأل:</strong> "إيه الملف اللي أحط فيه الكود؟" —
+          <strong>اسأل:</strong> Is it shared or page-specific? Is it markup or behavior or styling? Does merchant control it?
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 16 — Day 1 Final Mental Model ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">16</div>
+      <div class="slide-label">Final Mental Model</div>
+      <h1 class="slide-title">الصورة الكاملة — <span>Day 1</span></h1>
+      <div class="content">
+        <div class="row">
+          <div style="flex:1.5;min-width:200px">
+            <div class="tree">
+              <span class="hi">Salla Store</span>
+              <div>├── Store Data</div>
+              <div>└── Merchant / Theme Config</div>
+              <div>        ↓</div>
+              <span class="hi">Twilight Engine</span>
+              <div>        ↓</div>
+              <span class="hi2">Active Theme Repository</span>
+              <div>├── twilight.json</div>
+              <div>├── views/layouts/</div>
+              <div>├── views/pages/</div>
+              <div>├── views/components/</div>
+              <div>├── assets/js/</div>
+              <div>├── assets/styles/</div>
+              <div>└── locales/</div>
+              <div>        ↓</div>
+              <span class="hi">Twig Rendering</span>
+              <div>        ↓</div>
+              <div>HTML + Salla Web Components</div>
+              <div>        ↓</div>
+              <div>Browser: CSS + JavaScript</div>
+              <div>        ↓</div>
+              <span class="hi2">Interactive Storefront ✓</span>
+            </div>
+          </div>
+          <div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:0.7rem">
+            <div class="card" style="border-color:var(--accent-2)">
+              <h3>Development Side</h3>
+              <div class="tree" style="margin-top:0.5rem;font-size:0.78rem">
+                <div>Developer</div>
+                <div>   ↓</div>
+                <div>Theme Repository</div>
+                <div>   ↓</div>
+                <span class="hi2">Salla CLI</span>
+                <div>   ↓</div>
+                <div>Preview / Watch / Dev</div>
+              </div>
+            </div>
+            <div class="highlight-box card-accent">
+              <div class="big" style="font-size:1.1rem">"Twilight runs the Theme"</div>
+            </div>
+            <div class="card card-warm" style="font-size:0.82rem">
+              <strong>تذكر:</strong><br>
+              CLI لا يظهر في Production runtime
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 17 — Ready to Move On ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">17</div>
+      <div class="slide-label">Day 1 Gate</div>
+      <h1 class="slide-title">جاهز لليوم التاني؟ — <span>Criteria</span></h1>
+      <div class="content">
+        <div class="row">
+          <div class="col">
+            <div class="goal-list">
+              <div class="goal-item"><div class="goal-dot" style="background:var(--success)"></div><div class="goal-text">تفتح Theme Repository ومبقاش شايف Folders عشوائية</div></div>
+              <div class="goal-item"><div class="goal-dot" style="background:var(--success)"></div><div class="goal-text">تحدد وظيفة layouts, pages, components, assets, locales</div></div>
+              <div class="goal-item"><div class="goal-dot" style="background:var(--success)"></div><div class="goal-text">تشرح Store, Twilight, Theme, Salla CLI بدون تعريفات محفوظة</div></div>
+              <div class="goal-item"><div class="goal-dot" style="background:var(--success)"></div><div class="goal-text">تشرح ليه Browser لا يفهم Twig مباشرة</div></div>
+              <div class="goal-item"><div class="goal-dot" style="background:var(--success)"></div><div class="goal-text">تشرح Layout inheritance</div></div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="goal-list">
+              <div class="goal-item"><div class="goal-dot" style="background:var(--success)"></div><div class="goal-text">تعمل Trace للـHome Page من index.twig إلى master.twig إلى output</div></div>
+              <div class="goal-item"><div class="goal-dot" style="background:var(--success)"></div><div class="goal-text">تشرح وظيفة twilight.json بدون ما تحتاج تعرف كل field</div></div>
+              <div class="goal-item"><div class="goal-dot" style="background:var(--success)"></div><div class="goal-text">تفرق بين configuration schema وTwig rendering</div></div>
+              <div class="goal-item"><div class="goal-dot" style="background:var(--success)"></div><div class="goal-text">تتوقع Scope التغيير قبل ما تعمل Preview</div></div>
+              <div class="goal-item"><div class="goal-dot" style="background:var(--success)"></div><div class="goal-text">تقسّم Requirement إلى Responsibilities بدل ما تسأل "أعدل أنهي ملف وخلاص؟"</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SLIDE 18 — الخلاصة ─── -->
+    <div class="slide">
+      <div class="slide-num-watermark">18</div>
+      <div class="slide-label">الخلاصة</div>
+      <h1 class="slide-title">الفكرة الواحدة من اليوم</h1>
+      <div class="content">
+        <div class="highlight-box card-accent" style="padding:2rem">
+          <div class="big" style="font-size:clamp(1rem,2.5vw,1.5rem);line-height:1.6">
+            Salla Theme Development ليس "أين أضع HTML؟"<br>
+            <span style="color:var(--accent)">هو فهم Data + Rendering + Configuration + Scope + Ownership</span>
+          </div>
+        </div>
+        <div class="card" style="background:var(--bg-code)">
+          <h3>كل Requirement ستتحول من:</h3>
+          <div class="row" style="gap:1rem;margin-top:0.7rem;align-items:flex-start">
+            <div style="flex:1;text-align:center;padding:1rem;background:var(--accent-glow2);border-radius:10px;border:1px solid var(--accent-2)">
+              <div style="font-size:1rem;color:var(--accent-2);font-weight:700">❌ "عايز أعمل Feature"</div>
+            </div>
+            <div style="display:flex;align-items:center;font-size:1.5rem;color:var(--text-muted);padding-top:1rem">→</div>
+            <div style="flex:2">
+              <div class="flow-section">
+                <div class="flow-item" style="font-size:0.78rem;width:100%;text-align:center">Where does it belong?</div>
+                <div class="flow-arrow-v">↓</div>
+                <div class="flow-item" style="font-size:0.78rem;width:100%;text-align:center">What data/config does it need?</div>
+                <div class="flow-arrow-v">↓</div>
+                <div class="flow-item" style="font-size:0.78rem;width:100%;text-align:center">Twig / Page / Layout / Component?</div>
+                <div class="flow-arrow-v">↓</div>
+                <div class="flow-item" style="font-size:0.78rem;width:100%;text-align:center">JavaScript? CSS? Merchant config?</div>
+                <div class="flow-arrow-v">↓</div>
+                <div class="flow-item hi" style="font-size:0.78rem;width:100%;text-align:center">How broad? How will I verify it?</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="text-align:center;border-color:var(--success);box-shadow:inset 0 0 30px rgba(72,255,168,.08)">
+          <div style="font-size:1.1rem;font-weight:700;color:var(--success)">✓ Day 1 Complete</div>
+          <div style="font-size:0.85rem;color:var(--text-muted);margin-top:0.3rem">وده هو أساس الاستقلال الحقيقي في بناء Salla Twilight Themes</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /slides -->
+
+  <!-- ─── Navigation ─── -->
+  <nav class="nav">
+    <button class="nav-btn" id="prevBtn" aria-label="الشريحة السابقة">→</button>
+    <div class="nav-center">
+      <div class="nav-counter"><span id="currentNum">1</span> / <span id="totalNum">18</span></div>
+      <div class="nav-dots" id="dotsContainer"></div>
+    </div>
+    <button class="nav-btn" id="nextBtn" aria-label="الشريحة التالية">←</button>
+  </nav>
+</div>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let current = 0;
+
+  // Build dots
+  const dotsContainer = document.getElementById('dotsContainer');
+  document.getElementById('totalNum').textContent = total;
+  slides.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', 'شريحة ' + (i+1));
+    dot.addEventListener('click', () => goTo(i));
+    dotsContainer.appendChild(dot);
+  });
+
+  const dots = Array.from(dotsContainer.querySelectorAll('.dot'));
+  const progressFill = document.getElementById('progressFill');
+  const currentNum = document.getElementById('currentNum');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  function update() {
+    dots.forEach((d,i) => d.classList.toggle('active', i === current));
+    progressFill.style.width = ((current + 1) / total * 100) + '%';
+    currentNum.textContent = current + 1;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+  }
+
+  function goTo(n) {
+    if (n === current || n < 0 || n >= total) return;
+    const direction = n > current ? 1 : -1;
+    const prev = slides[current];
+    prev.classList.remove('active');
+    prev.classList.add(direction > 0 ? 'exit-right' : 'enter-left');
+    setTimeout(() => prev.classList.remove('exit-right','enter-left'), 500);
+    current = n;
+    slides[current].classList.add('active');
+    update();
+  }
+
+  prevBtn.addEventListener('click', () => goTo(current - 1));
+  nextBtn.addEventListener('click', () => goTo(current + 1));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft')  goTo(current + 1);
+    if (e.key === 'ArrowRight') goTo(current - 1);
+    if (e.key === 'Home') goTo(0);
+    if (e.key === 'End') goTo(total - 1);
+  });
+
+  // Touch/swipe
+  let touchX = null;
+  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX });
+  document.addEventListener('touchend', e => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) goTo(current + (dx < 0 ? 1 : -1));
+    touchX = null;
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
+
